@@ -33,7 +33,8 @@ int InitRenderDevice()
     Engine.window = SDL_CreateWindow(gameTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_XSIZE, SCREEN_YSIZE,
                                      SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
-    Engine.renderer = SDL_CreateRenderer(Engine.window, -1, SDL_RENDERER_ACCELERATED);
+    Engine.renderer = SDL_CreateRenderer(Engine.window, 1, SDL_RENDERER_ACCELERATED);
+    SDL_GL_SetSwapInterval(1);
 
     if (!Engine.window) {
         printLog("ERROR: failed to create window!");

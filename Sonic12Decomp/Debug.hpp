@@ -27,7 +27,7 @@ inline void printLog(const char *msg, ...)
         else
             sprintf(pathBuffer, "log.txt");
 #else
-        sprintf(pathBuffer, BASE_PATH "log.txt");
+        sprintf(pathBuffer, "%s%s", BASE_PATH, "log.txt");
 #endif
         FileIO *file = fOpen(pathBuffer, "a");
         if (file) {
@@ -55,7 +55,7 @@ inline void printLog(const ushort *msg)
         else
             sprintf(pathBuffer, "log.txt");
 #else
-        sprintf(pathBuffer, BASE_PATH "log.txt");
+		sprintf(pathBuffer, "%s%s", BASE_PATH, "log.txt");
 #endif
         mPos         = 0;
         FileIO *file = fOpen(pathBuffer, "a");

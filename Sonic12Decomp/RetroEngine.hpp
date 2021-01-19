@@ -87,9 +87,12 @@ typedef unsigned int uint;
 
 #else
 
-#define BASE_PATH            ""
+//#define BASE_PATH ""
+extern char BASE_PATH[128];
+//#define BASE_PATH            ""
+#define DEFAULT_WINDOW_SCALE 1
 #define BASE_RO_PATH         ""
-#define DEFAULT_SCREEN_XSIZE 424 
+#define DEFAULT_SCREEN_XSIZE 320 
 #define DEFAULT_FULLSCREEN   false
 #define SCREEN_YSIZE         (240)
 #define RETRO_USING_MOUSE

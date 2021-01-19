@@ -1,4 +1,6 @@
 #include "RetroEngine.hpp"
+#include <sys/stat.h>
+#include <libgen.h>
 
 int globalVariablesCount;
 int globalVariables[GLOBALVAR_COUNT];
@@ -21,8 +23,17 @@ int matchValueWritePos = 0;
 int sendDataMethod = 0;
 int sendCounter    = 0;
 
+char BASE_PATH[128];
+char GAME_PATH[128];
+
+extern int alreadyset;
+
 void InitUserdata()
 {
+	sprintf(BASE_PATH, "%s/.sonic/", getenv("HOME"));
+	
+	mkdir(BASE_PATH, 0755);
+	
     // userdata files are loaded from this directory
     sprintf(gamePath, "%s", BASE_PATH);
 
@@ -33,8 +44,10 @@ void InitUserdata()
     else
         sprintf(buffer, "%ssettings.ini", gamePath);
 #else
-    sprintf(buffer, BASE_PATH "settings.ini");
+    sprintf(buffer, "%ssettings.ini", gamePath);
 #endif
+	if (alreadyset == 0) sprintf(Engine.dataFile, "%s/.sonic/Data.rsdk", getenv("HOME"));
+
     FileIO *file = fOpen(buffer, "rb");
     if (!file) {
         IniParser ini;
@@ -62,9 +75,9 @@ void InitUserdata()
         ini.SetInteger("Keyboard 1", "Down", inputDevice[1].keyMappings = SDL_SCANCODE_DOWN);
         ini.SetInteger("Keyboard 1", "Left", inputDevice[2].keyMappings = SDL_SCANCODE_LEFT);
         ini.SetInteger("Keyboard 1", "Right", inputDevice[3].keyMappings = SDL_SCANCODE_RIGHT);
-        ini.SetInteger("Keyboard 1", "A", inputDevice[4].keyMappings = SDL_SCANCODE_Z);
-        ini.SetInteger("Keyboard 1", "B", inputDevice[5].keyMappings = SDL_SCANCODE_X);
-        ini.SetInteger("Keyboard 1", "C", inputDevice[6].keyMappings = SDL_SCANCODE_C);
+        ini.SetInteger("Keyboard 1", "A", inputDevice[4].keyMappings = SDL_SCANCODE_LCTRL);
+        ini.SetInteger("Keyboard 1", "B", inputDevice[5].keyMappings = SDL_SCANCODE_LALT);
+        ini.SetInteger("Keyboard 1", "C", inputDevice[6].keyMappings = SDL_SCANCODE_LSHIFT);
         ini.SetInteger("Keyboard 1", "Start", inputDevice[7].keyMappings = SDL_SCANCODE_RETURN);
 
         ini.SetInteger("Controller 1", "Up", inputDevice[0].contMappings = SDL_CONTROLLER_BUTTON_DPAD_UP);
@@ -76,14 +89,14 @@ void InitUserdata()
         ini.SetInteger("Controller 1", "C", inputDevice[6].contMappings = SDL_CONTROLLER_BUTTON_X);
         ini.SetInteger("Controller 1", "Start", inputDevice[7].contMappings = SDL_CONTROLLER_BUTTON_START);
 
-        StrCopy(Engine.dataFile, "Data.rsdk");
+        //StrCopy(Engine.dataFile, GAME_PATH);
         ini.SetString("Dev", "DataFile", Engine.dataFile);
 
-        ini.Write(BASE_PATH "settings.ini");
+        ini.Write(buffer);
     }
     else {
         fClose(file);
-        IniParser ini(BASE_PATH "settings.ini");
+        IniParser ini(buffer);
 
         if (!ini.GetBool("Dev", "DevMenu", &Engine.devMenu))
             Engine.devMenu = false;
@@ -98,8 +111,8 @@ void InitUserdata()
         if (!ini.GetBool("Dev", "UseHQModes", &Engine.useHQModes))
             Engine.useHQModes = true;
 
-        if (!ini.GetString("Dev", "DataFile", Engine.dataFile))
-            StrCopy(Engine.dataFile, "Data.rsdk");
+        /*if (!ini.GetString("Dev", "DataFile", Engine.dataFile))
+            StrCopy(Engine.dataFile, GAME_PATH);*/
 
         if (!ini.GetInteger("Game", "Language", &Engine.language))
             Engine.language = RETRO_EN;
@@ -192,6 +205,9 @@ void InitUserdata()
 
 void writeSettings()
 {
+	char buffer[0x100];
+	sprintf(buffer, "%ssettings.ini", gamePath);
+	
     IniParser ini;
 
     ini.SetComment("Dev", "DevMenuComment", "Enable this flag to activate dev menu via the ESC key");
@@ -266,7 +282,7 @@ void writeSettings()
     ini.SetInteger("Controller 1", "C", inputDevice[6].contMappings);
     ini.SetInteger("Controller 1", "Start", inputDevice[7].contMappings);
 
-    ini.Write("settings.ini");
+    ini.Write(buffer);
 }
 
 void ReadUserdata()

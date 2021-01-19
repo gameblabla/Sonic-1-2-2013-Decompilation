@@ -1,5 +1,7 @@
 #include "RetroEngine.hpp"
 
+int alreadyset = 0;
+
 #if RETRO_PLATFORM == RETRO_NX
 #include <switch.h>
 
@@ -27,6 +29,12 @@ int main(int argc, char *argv[])
         if (StrComp(argv[i], "UsingCWD"))
             usingCWD = true;
     }
+    
+    if (argc > 1)
+    {
+		sprintf(Engine.dataFile, "%s", argv[1]);
+		alreadyset = 1;
+	}
 
     Engine.Init();
 
