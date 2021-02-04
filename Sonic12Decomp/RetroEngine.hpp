@@ -70,18 +70,30 @@ typedef unsigned int uint;
 #define RETRO_DEVICETYPE (RETRO_STANDARD)
 #endif
 
+#ifdef OPENDINGUX
+#define DEFAULT_SCREEN_XSIZE 320
+#define DEFAULT_FULLSCREEN   true
+// set this to 1 (integer scale) for other platforms that don't support bilinear and don't have an even screen size
+#define RETRO_DEFAULTSCALINGMODE 1
+#else
 #define DEFAULT_SCREEN_XSIZE 424
 #define DEFAULT_FULLSCREEN   false
 #define RETRO_USING_MOUSE
 #define RETRO_USING_TOUCH
 // set this to 1 (integer scale) for other platforms that don't support bilinear and don't have an even screen size
 #define RETRO_DEFAULTSCALINGMODE 2
+#endif
 
+/*
 #ifndef BASE_PATH
 #define BASE_PATH ""
 #endif
+*/
 
-#if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_OSX || RETRO_PLATFORM == RETRO_UWP
+#if defined(FORCESDL1)
+#define RETRO_USING_SDL1 (1)
+#define RETRO_USING_SDL2 (0)
+#elif RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_OSX || RETRO_PLATFORM == RETRO_UWP
 #define RETRO_USING_SDL1 (0)
 #define RETRO_USING_SDL2 (1)
 #else // Since its an else & not an elif these platforms probably aren't supported yet
@@ -282,7 +294,11 @@ public:
     bool borderless       = false;
     bool vsync            = false;
     int scalingMode       = RETRO_DEFAULTSCALINGMODE;
-    int windowScale       = 2;
+    #ifdef OPENDINGUX
+    int windowScale       = 1;
+    #else
+	int windowScale       = 2;
+    #endif
     int refreshRate       = 60; // user-picked screen update rate
     int screenRefreshRate = 60; // hardware screen update rate
     int targetRefreshRate = 60; // game logic update rate

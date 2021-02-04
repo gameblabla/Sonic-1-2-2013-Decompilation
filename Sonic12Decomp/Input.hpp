@@ -107,8 +107,6 @@ inline void controllerClose(byte controllerID)
 #endif
 
 #if RETRO_USING_SDL1
-extern byte keyState[SDLK_LAST];
-
 extern SDL_Joystick *controller;
 #endif
 

@@ -4,8 +4,13 @@ short blendLookupTable[BLENDTABLE_SIZE];
 short subtractLookupTable[BLENDTABLE_SIZE];
 short tintLookupTable[TINTTABLE_SIZE];
 
+#ifdef OPENDINGUX
+int SCREEN_XSIZE   = 320;
+int SCREEN_CENTERX = 320 / 2;
+#else
 int SCREEN_XSIZE   = 424;
 int SCREEN_CENTERX = 424 / 2;
+#endif
 
 DrawListEntry drawListEntries[DRAWLAYER_COUNT];
 
@@ -26,10 +31,12 @@ int InitRenderDevice()
 
     sprintf(gameTitle, "%s%s", Engine.gameWindowText, Engine.usingDataFile ? "" : " (Using Data Folder)");
 
+	#ifndef OPENDINGUX
     Engine.frameBuffer   = new ushort[SCREEN_XSIZE * SCREEN_YSIZE];
     Engine.frameBuffer2x = new ushort[(SCREEN_XSIZE * 2) * (SCREEN_YSIZE * 2)];
     memset(Engine.frameBuffer, 0, (SCREEN_XSIZE * SCREEN_YSIZE) * sizeof(ushort));
     memset(Engine.frameBuffer2x, 0, (SCREEN_XSIZE * 2) * (SCREEN_YSIZE * 2) * sizeof(ushort));
+    #endif
 
 #if RETRO_USING_SDL2
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -102,6 +109,11 @@ int InitRenderDevice()
 #if RETRO_USING_SDL1
     SDL_Init(SDL_INIT_EVERYTHING);
 
+#ifdef OPENDINGUX
+	SDL_ShowCursor(0);
+	Engine.screenBuffer = SDL_SetVideoMode(SCREEN_XSIZE * Engine.windowScale, SCREEN_YSIZE * Engine.windowScale, 16, SDL_SWSURFACE);
+	Engine.frameBuffer = (uint16_t*)Engine.screenBuffer->pixels;
+#else
     Engine.windowSurface = SDL_SetVideoMode(SCREEN_XSIZE * Engine.windowScale, SCREEN_YSIZE * Engine.windowScale, 32, SDL_SWSURFACE);
     if (!Engine.windowSurface) {
         printLog("ERROR: failed to create window!\nerror msg: %s", SDL_GetError());
@@ -131,6 +143,7 @@ int InitRenderDevice()
         SDL_ShowCursor(SDL_FALSE);
         Engine.isFullScreen = true;
     }
+#endif
 
     // TODO: not supported in 1.2?
     if (Engine.borderless) {
@@ -295,6 +308,9 @@ void RenderRenderDevice()
 #endif
 
 #if RETRO_USING_SDL1
+	#ifdef OPENDINGUX
+	SDL_Flip(Engine.screenBuffer);
+	#else
     ushort *px = (ushort *)Engine.screenBuffer->pixels;
     int w      = SCREEN_XSIZE * Engine.windowScale;
     int h      = SCREEN_YSIZE * Engine.windowScale;
@@ -318,18 +334,19 @@ void RenderRenderDevice()
             dx = 0;
         } while (dy < h);
     }
-
-    // Apply image to screen
+	// Apply image to screen
     SDL_BlitSurface(Engine.screenBuffer, NULL, Engine.windowSurface, NULL);
-
     // Update Screen
     SDL_Flip(Engine.windowSurface);
+    #endif
 #endif
 }
 void ReleaseRenderDevice()
 {
+#ifndef OPENDINGUX
     if (Engine.frameBuffer)
         delete[] Engine.frameBuffer;
+#endif
 #if RETRO_USING_SDL2
     SDL_DestroyTexture(Engine.screenBuffer);
     Engine.screenBuffer = NULL;
@@ -339,7 +356,8 @@ void ReleaseRenderDevice()
 #endif
 
 #if RETRO_USING_SDL1
-    SDL_FreeSurface(Engine.screenBuffer);
+	if (Engine.screenBuffer) SDL_FreeSurface(Engine.screenBuffer);
+	if (Engine.windowSurface) SDL_FreeSurface(Engine.windowSurface);
 #endif
 }
 

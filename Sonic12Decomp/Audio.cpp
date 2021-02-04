@@ -59,6 +59,7 @@ int InitAudioPlayback()
     want.samples  = AUDIO_SAMPLES;
     want.channels = AUDIO_CHANNELS;
     want.callback = ProcessAudioPlayback;
+    want.userdata = NULL;
 
 #if RETRO_USING_SDL2
     if ((audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &audioDeviceFormat, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE)) > 0) {

@@ -24,8 +24,8 @@ SDL_GameController *controller = nullptr;
 #endif
 
 #if RETRO_USING_SDL1
-byte keyState[SDLK_LAST];
-
+//byte keyState[SDLK_LAST];
+byte* keyState;
 SDL_Joystick *controller = nullptr;
 #endif
 
@@ -116,26 +116,7 @@ void ProcessInput()
     else if (inputType == 1)
         inputDevice[INPUT_ANY].setReleased();
 #elif RETRO_USING_SDL1
-    if (SDL_NumJoysticks() > 0) {
-        controller = SDL_JoystickOpen(0);
-
-        // There's a problem opening the joystick
-        if (controller == NULL) {
-            // Uh oh
-        }
-        else {
-            inputType = 1;
-        }
-    }
-    else {
-        if (controller) {
-            // Close the joystick
-            SDL_JoystickClose(controller);
-        }
-        controller = nullptr;
-        inputType  = 0;
-    }
-
+	keyState = SDL_GetKeyState(NULL);
     if (inputType == 0) {
         for (int i = 0; i < INPUT_MAX; i++) {
             if (keyState[inputDevice[i].keyMappings]) {
@@ -147,7 +128,7 @@ void ProcessInput()
                 inputDevice[i].setReleased();
         }
     }
-    else if (inputType == 1 && controller) {
+    else if (inputType == 1) {
         for (int i = 0; i < INPUT_MAX; i++) {
             if (SDL_JoystickGetButton(controller, inputDevice[i].contMappings)) {
                 inputDevice[i].setHeld();
@@ -171,17 +152,17 @@ void ProcessInput()
     else if (inputType == 0)
         inputDevice[INPUT_ANY].setReleased();
 
-    int buttonCnt = 0;
-    if (controller)
-        buttonCnt = SDL_JoystickNumButtons(controller);
-    bool flag = false;
-    for (int i = 0; i < buttonCnt; ++i) {
-        flag      = true;
+    isPressed = false;
+    for (int i = 0; i < SDL_JoystickNumButtons(controller); i++) {
+        if (SDL_JoystickGetButton(controller, inputDevice[i].contMappings)) {
+            isPressed = true;
+            break;
+        }
+    }
+    if (isPressed)
         inputType = 1;
-    }
-    if (!flag && inputType == 1) {
+    else if (inputType == 1)
         inputDevice[INPUT_ANY].setReleased();
-    }
 #endif
 }
 

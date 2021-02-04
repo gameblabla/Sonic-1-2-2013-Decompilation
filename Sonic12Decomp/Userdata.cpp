@@ -1,4 +1,6 @@
 #include "RetroEngine.hpp"
+#include <sys/stat.h>
+#include <libgen.h>
 
 int globalVariablesCount;
 int globalVariables[GLOBALVAR_COUNT];
@@ -23,8 +25,16 @@ int sendCounter    = 0;
 
 bool skipStartMenu = false;
 
+char BASE_PATH[128];
+char GAME_PATH[128];
+
+extern int alreadyset;
+
 void InitUserdata()
 {
+	sprintf(BASE_PATH, "%s/.sonic/", getenv("HOME"));
+	mkdir(BASE_PATH, 0755);
+	
     // userdata files are loaded from this directory
     sprintf(gamePath, "%s", BASE_PATH);
 
@@ -35,8 +45,9 @@ void InitUserdata()
     else
         sprintf(buffer, "%ssettings.ini", gamePath);
 #else
-    sprintf(buffer, BASE_PATH "settings.ini");
+    sprintf(buffer, "%ssettings.ini", gamePath);
 #endif
+	if (alreadyset == 0) sprintf(Engine.dataFile, "%s/.sonic/Data.rsdk", getenv("HOME"));
     FileIO *file = fOpen(buffer, "rb");
     if (!file) {
         IniParser ini;
@@ -57,7 +68,11 @@ void InitUserdata()
         ini.SetBool("Window", "Borderless", Engine.borderless = false);
         ini.SetBool("Window", "VSync", Engine.vsync = false);
         ini.SetInteger("Window", "ScalingMode", Engine.scalingMode = RETRO_DEFAULTSCALINGMODE);
+        #ifdef OPENDINGUX
+		ini.SetInteger("Window", "WindowScale", Engine.windowScale = 1);
+        #else
         ini.SetInteger("Window", "WindowScale", Engine.windowScale = 2);
+        #endif
         ini.SetInteger("Window", "ScreenWidth", SCREEN_XSIZE = DEFAULT_SCREEN_XSIZE);
         ini.SetInteger("Window", "RefreshRate", Engine.refreshRate = 60);
 
@@ -101,10 +116,10 @@ void InitUserdata()
         ini.SetInteger("Keyboard 1", "Down", inputDevice[INPUT_DOWN].keyMappings = SDLK_DOWN);
         ini.SetInteger("Keyboard 1", "Left", inputDevice[INPUT_LEFT].keyMappings = SDLK_LEFT);
         ini.SetInteger("Keyboard 1", "Right", inputDevice[INPUT_RIGHT].keyMappings = SDLK_RIGHT);
-        ini.SetInteger("Keyboard 1", "A", inputDevice[INPUT_BUTTONA].keyMappings = SDLK_z);
-        ini.SetInteger("Keyboard 1", "B", inputDevice[INPUT_BUTTONB].keyMappings = SDLK_x);
-        ini.SetInteger("Keyboard 1", "C", inputDevice[INPUT_BUTTONC].keyMappings = SDLK_c);
-        ini.SetInteger("Keyboard 1", "X", inputDevice[INPUT_BUTTONX].keyMappings = SDLK_a);
+        ini.SetInteger("Keyboard 1", "A", inputDevice[INPUT_BUTTONA].keyMappings = SDLK_LCTRL);
+        ini.SetInteger("Keyboard 1", "B", inputDevice[INPUT_BUTTONB].keyMappings = SDLK_LALT);
+        ini.SetInteger("Keyboard 1", "C", inputDevice[INPUT_BUTTONC].keyMappings = SDLK_LSHIFT);
+        ini.SetInteger("Keyboard 1", "X", inputDevice[INPUT_BUTTONX].keyMappings = SDLK_SPACE);
         ini.SetInteger("Keyboard 1", "Y", inputDevice[INPUT_BUTTONY].keyMappings = SDLK_s);
         ini.SetInteger("Keyboard 1", "Z", inputDevice[INPUT_BUTTONZ].keyMappings = SDLK_d);
         ini.SetInteger("Keyboard 1", "L", inputDevice[INPUT_BUTTONL].keyMappings = SDLK_q);
@@ -128,14 +143,14 @@ void InitUserdata()
         ini.SetInteger("Controller 1", "Select", inputDevice[INPUT_SELECT].contMappings = 14);
 #endif
 
-        StrCopy(Engine.dataFile, "Data.rsdk");
+        //StrCopy(Engine.dataFile, "Data.rsdk");
         ini.SetString("Dev", "DataFile", Engine.dataFile);
 
-        ini.Write(BASE_PATH "settings.ini");
+        ini.Write(buffer);
     }
     else {
         fClose(file);
-        IniParser ini(BASE_PATH "settings.ini");
+        IniParser ini(buffer);
 
         if (!ini.GetBool("Dev", "DevMenu", &Engine.devMenu))
             Engine.devMenu = false;
@@ -154,8 +169,8 @@ void InitUserdata()
         if (!ini.GetBool("Dev", "UseHQModes", &Engine.useHQModes))
             Engine.useHQModes = true;
 
-        if (!ini.GetString("Dev", "DataFile", Engine.dataFile))
-            StrCopy(Engine.dataFile, "Data.rsdk");
+        /*if (!ini.GetString("Dev", "DataFile", Engine.dataFile))
+            StrCopy(Engine.dataFile, "Data.rsdk");*/
         if (!ini.GetBool("Game", "SkipStartMenu", &skipStartMenu))
             skipStartMenu = false;
 
@@ -170,8 +185,13 @@ void InitUserdata()
             Engine.vsync = false;
         if (!ini.GetInteger("Window", "ScalingMode", &Engine.scalingMode))
             Engine.scalingMode = RETRO_DEFAULTSCALINGMODE;
+		#ifdef OPENDINGUX
+        if (!ini.GetInteger("Window", "WindowScale", &Engine.windowScale))
+            Engine.windowScale = 1;
+		#else
         if (!ini.GetInteger("Window", "WindowScale", &Engine.windowScale))
             Engine.windowScale = 2;
+        #endif
         if (!ini.GetInteger("Window", "ScreenWidth", &SCREEN_XSIZE))
             SCREEN_XSIZE = DEFAULT_SCREEN_XSIZE;
         if (!ini.GetInteger("Window", "RefreshRate", &Engine.refreshRate))
@@ -268,13 +288,13 @@ void InitUserdata()
         if (!ini.GetInteger("Keyboard 1", "Right", &inputDevice[INPUT_RIGHT].keyMappings))
             inputDevice[INPUT_RIGHT].keyMappings = SDLK_RIGHT;
         if (!ini.GetInteger("Keyboard 1", "A", &inputDevice[INPUT_BUTTONA].keyMappings))
-            inputDevice[INPUT_BUTTONA].keyMappings = SDLK_z;
+            inputDevice[INPUT_BUTTONA].keyMappings = SDLK_LCTRL;
         if (!ini.GetInteger("Keyboard 1", "B", &inputDevice[INPUT_BUTTONB].keyMappings))
-            inputDevice[INPUT_BUTTONB].keyMappings = SDLK_x;
+            inputDevice[INPUT_BUTTONB].keyMappings = SDLK_LALT;
         if (!ini.GetInteger("Keyboard 1", "C", &inputDevice[INPUT_BUTTONC].keyMappings))
-            inputDevice[INPUT_BUTTONC].keyMappings = SDLK_c;
+            inputDevice[INPUT_BUTTONC].keyMappings = SDLK_LSHIFT;
         if (!ini.GetInteger("Controller 1", "X", &inputDevice[INPUT_BUTTONX].contMappings))
-            inputDevice[INPUT_BUTTONX].contMappings = SDLK_a;
+            inputDevice[INPUT_BUTTONX].contMappings = SDLK_SPACE;
         if (!ini.GetInteger("Controller 1", "Y", &inputDevice[INPUT_BUTTONY].contMappings))
             inputDevice[INPUT_BUTTONY].contMappings = SDLK_s;
         if (!ini.GetInteger("Controller 1", "Z", &inputDevice[INPUT_BUTTONZ].contMappings))
@@ -361,6 +381,8 @@ void InitUserdata()
 
 void writeSettings()
 {
+	char buffer[0x100];
+	sprintf(buffer, "%ssettings.ini", gamePath);
     IniParser ini;
 
     ini.SetComment("Dev", "DevMenuComment", "Enable this flag to activate dev menu via the ESC key");
@@ -465,7 +487,7 @@ void writeSettings()
     ini.SetInteger("Controller 1", "LTriggerDeadzone", LTRIGGER_DEADZONE);
     ini.SetInteger("Controller 1", "RTriggerDeadzone", RTRIGGER_DEADZONE);
 
-    ini.Write(BASE_PATH "settings.ini");
+    ini.Write(buffer);
 }
 
 void ReadUserdata()

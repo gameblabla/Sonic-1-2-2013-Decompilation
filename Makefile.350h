@@ -1,8 +1,10 @@
-CXXFLAGS_ALL = $(shell pkg-config --cflags --static sdl vorbisfile vorbis) $(CXXFLAGS) \
-               -DFORCESDL1 -DRETRO_DISABLE_LOG -DOPENDINGUX -g3
 
+CXX = /opt/gcw0-toolchain-static/bin/mipsel-linux-g++
+CXXFLAGS +=  -Ofast -fdata-sections -ffunction-sections -mframe-header-opt -mno-fp-exceptions -mno-check-zero-division -fsingle-precision-constant -fno-common -march=mips32r2 -mtune=mips32r2 -flto
+CXXFLAGS_ALL = $(shell /opt/gcw0-toolchain-static/bin/pkg-config --cflags sdl vorbisfile vorbis) $(CXXFLAGS) -DFORCESDL1 -DRETRO_DISABLE_LOG -DOPENDINGUX
+LDFLAGS +=  -flto -Wl,--as-needed -Wl,--gc-sections -no-pie -s
 LDFLAGS_ALL = $(LDFLAGS)
-LIBS_ALL = $(shell pkg-config --libs --static sdl vorbisfile vorbis) -pthread $(LIBS)
+LIBS_ALL = $(shell /opt/gcw0-toolchain-static/bin/pkg-config --libs sdl vorbisfile vorbis) -pthread $(LIBS) -flto -Wl,--as-needed -Wl,--gc-sections -no-pie -s
 
 SOURCES = Sonic12Decomp/Animation.cpp     \
           Sonic12Decomp/Audio.cpp         \

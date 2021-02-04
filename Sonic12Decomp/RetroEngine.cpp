@@ -224,19 +224,12 @@ bool processEvents()
                         break;
 #endif
                 }
-
-#if RETRO_USING_SDL1
-                keyState[Engine.sdlEvents.key.keysym.sym] = 1;
-#endif
                 break;
             case SDL_KEYUP:
                 switch (Engine.sdlEvents.key.keysym.sym) {
                     default: break;
                     case SDLK_BACKSPACE: Engine.gameSpeed = 1; break;
                 }
-#if RETRO_USING_SDL1
-                keyState[Engine.sdlEvents.key.keysym.sym] = 0;
-#endif
                 break;
             case SDL_QUIT: return false;
         }
@@ -250,6 +243,7 @@ bool processEvents()
 #endif
 void RetroEngine::Init()
 {
+	extern char BASE_PATH[128];
     CalculateTrigAngles();
     GenerateBlendLookupTable();
 
@@ -268,10 +262,9 @@ void RetroEngine::Init()
     strcpy(dest, resourcePath);
     strcat(dest, "\\Data.rsdk");
 #else
-    StrCopy(dest, BASE_PATH);
-    StrAdd(dest, Engine.dataFile);
+    snprintf(dest, sizeof(dest), "%s", Engine.dataFile);
 #endif
-    CheckRSDKFile(dest);
+	CheckRSDKFile(dest);
     InitNativeObjectSystem();
 
 #if RETRO_USE_NETWORKING
@@ -480,7 +473,10 @@ void RetroEngine::Run()
     writeSettings();
 
 #if RETRO_USING_SDL1 || RETRO_USING_SDL2
-    SDL_Quit();
+	SDL_PauseAudio(1);
+	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	SDL_Quit();
 #endif
 }
 
